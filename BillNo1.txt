@@ -1,0 +1,9 @@
+Order id: 1
+Placed at: 2021/04/20 06:22:43
+Client details:Address:Address 1
+Phone number: 072724245
+Email: Address 1
+Product: product2567
+Quantity: 2
+Price per product:25.6
+Total: 51.2
