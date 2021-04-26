@@ -1,6 +1,8 @@
 bll
+bll.validators
 connection
 dao
+exceptions
 mainController
 model
 presentation

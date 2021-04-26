@@ -26,6 +26,10 @@ public class Order {
         return idOrder;
     }
 
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+
     public void setIdOrder(int idOrder) {
         this.idOrder = idOrder;
     }

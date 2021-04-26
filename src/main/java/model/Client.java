@@ -1,5 +1,7 @@
 package model;
 
+import java.util.List;
+
 public class Client {
     private int idClient;
     private String name;
@@ -14,6 +16,12 @@ public class Client {
         this.email = email;
         this.phoneNumber = phoneNumber;
 
+    }
+    public Client(List<String> fields){
+        this.name = fields.get(0);
+        this.address = fields.get(1);
+        this.email = fields.get(2);
+        this.phoneNumber = fields.get(3);
     }
     public Client(){
 

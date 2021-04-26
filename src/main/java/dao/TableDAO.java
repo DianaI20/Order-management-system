@@ -4,7 +4,7 @@ import javax.swing.*;
 import java.lang.reflect.Field;
 import java.util.List;
 
-public class TableDao<T> {
+public class TableDAO<T> {
     /**
      * Function that creates a JTable with the fields and values of the generic object
      * @param t the generic list of objects

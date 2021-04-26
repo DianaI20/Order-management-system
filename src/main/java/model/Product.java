@@ -1,5 +1,7 @@
 package model;
 
+import java.util.List;
+
 public class Product {
 
     private int productID;
@@ -14,7 +16,12 @@ public class Product {
         this.description = description;
         this.leftInStock  = leftInStock;
     }
-
+    public Product(List<String > fields) {
+        this.name = fields.get(0);
+        this.price = Float.parseFloat(fields.get(1));
+        this.description = fields.get(2);
+        this.leftInStock  = Integer.parseInt(fields.get(3));
+    }
     public Product() {
 
     }
@@ -63,6 +70,6 @@ public class Product {
     public String toString() {
         return
                 "ID =" + productID +
-                        ", Name: " + name;
+                        ", Name: " + name + ", Price: "+ price;
     }
 }

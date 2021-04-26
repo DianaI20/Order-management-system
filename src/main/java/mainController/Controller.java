@@ -9,23 +9,22 @@ import model.Product;
 import presentation.*;
 
 import javax.swing.*;
-import java.awt.*;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Controller {
-    private MainFrame mainFrame;
 
+    private MainFrame mainFrame;
+    private ClientFrame clientFrame;
+    private ProductFrame productFrame;
+    private OrderFrame orderFrame;
     private ClientBLL clientBLL;
     private ProductBLL productBLL;
     private OrderBLL orderBLL;
     private Receipt receipt;
+
 
     public Controller() {
         mainFrame = new MainFrame("Order Management");
@@ -33,216 +32,209 @@ public class Controller {
         productBLL = new ProductBLL();
         orderBLL = new OrderBLL();
         receipt = new Receipt();
-        addMainFrameActions();
+        addMainFrameAction();
     }
 
-    /**
-     * Function to add actions for buttons in the main frame
-     */
-    private void addMainFrameActions() {
-
+    public void addMainFrameAction() {
         mainFrame.getClientOperationsButton().addActionListener(e -> {
-            ClientFrame clientFrame = new ClientFrame("Client Operations");
-            addClientFrameActions(clientFrame);
+            clientFrame = new ClientFrame("Client Operations");
+            addClientAction();
+            editClientAction();
+            viewClientsAction();
+            deleteClientAction();
         });
         mainFrame.getProductOperationsButton().addActionListener(e -> {
-            ProductFrame productFrame = new ProductFrame("Product Operations");
-            addProductFrameActions(productFrame);
+            productFrame = new ProductFrame("Product Operations",productBLL.getTableOfProducts());
+            addProductAction();
+            editProductAction();
+            viewProductsAction();
+            deleteProductAction();
         });
         mainFrame.getOrdersButton().addActionListener(e -> {
-            OrderFrame orderFrame = new OrderFrame("Place order", productBLL.getProductItems(), clientBLL.getClientItems());
-            addOrderAction(orderFrame);
+            orderFrame = new OrderFrame("Place order", productBLL.getProductItems(), clientBLL.getClientItems());
+            addOrderAction();
+            viewOrdersAction();
+        });}
+    /**
+     * Method to add action for the add button on the client frame.
+     */
+    public void addClientAction() {
+        clientFrame.getAddClientButton().addActionListener(f -> {
+            Client client = new Client(getClientTextFields());
+            if (clientBLL.addNewClient(client) != -1) {
+                JOptionPane.showMessageDialog(null, "Client added successfully.", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+                refreshClientFrame();
+            }
+        });
+    }
+
+    public void editClientAction() {
+        clientFrame.getEditClientButton().addActionListener(e -> {
+            try {
+                int id = Integer.parseInt(clientFrame.getIdField().getText());
+                List<String> fields = getClientTextFields();
+                Client client = clientBLL.findClientById(id);
+                if (fields.get(0).equals("") == false) {
+                    client.setName(fields.get(0));
+                }
+                if (fields.get(1).equals("") == false) {
+                    client.setAddress(fields.get(1));
+                }
+                if (fields.get(2).equals("") == false) {
+                    client.setEmail(fields.get(2));
+                }
+                if (fields.get(3).equals("") == false) {
+                    client.setPhoneNumber(fields.get(3));
+                }
+                clientBLL.editClient(client);
+                JOptionPane.showMessageDialog(null, "Client edited successfully.", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+                refreshClientFrame();
+            } catch (NumberFormatException f) {
+                JOptionPane.showMessageDialog(null, "Invalid id.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    public void viewClientsAction() {
+        clientFrame.getViewClientButton().addActionListener(e -> {
+            clientFrame.getTablePanel().removeAll();
+            clientFrame.getTablePanel().add(new JScrollPane(clientBLL.getTableOfClients()));
+            clientFrame.getTablePanel().revalidate();
+            clientFrame.getTablePanel().repaint();
+        });
+    }
+
+    public void deleteClientAction() {
+        clientFrame.getDeleteClientButton().addActionListener(e->{
+            try {
+                int id = Integer.parseInt(clientFrame.getIdField().getText());
+                Client temp = new Client();
+                temp.setIdClient(id);
+                clientBLL.deleteClient(temp);
+                JOptionPane.showMessageDialog(null, "Client removed.", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+                refreshClientFrame();
+            } catch (NumberFormatException f) {
+                JOptionPane.showMessageDialog(null, "Invalid id.", "ERROR", JOptionPane.INFORMATION_MESSAGE);
+            }
+        });
+
+    }
+
+    /**
+     * Method to add action for the add button of the product frame
+     */
+    public void addProductAction() {
+        productFrame.getAddProductButton().addActionListener(f -> {
+            try{
+            Product product = new Product(getProductTextFields());
+            if (productBLL.addNewProduct(product) != -1) {
+                JOptionPane.showMessageDialog(null, "Product added successfully.", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+                refreshProductFrame();
+            }}catch (NumberFormatException e){
+                JOptionPane.showMessageDialog(null, "Error in numerical fields.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
         });
     }
 
     /**
-     * Function to retrieve the parameters from the text fields and create an object of type Client
-     *
-     * @param clientFrame - The frame which deals with  information about the client
+     * Method to add action for the edit button of the product frame
      */
-    private void addClientFrameActions(ClientFrame clientFrame) {
-        addDeleteAndViewClient(clientFrame);
-        clientFrame.getAddClientButton().addActionListener(e -> {
-            AddClientFrame addClientFrame = new AddClientFrame("Add client ");
-            addClientFrame.getAddClientButton().addActionListener(f -> {
-                    Client client = new Client(addClientFrame.getNameField().getText(), addClientFrame.getAdressField().getText(),
-                        addClientFrame.getEmailField().getText(), addClientFrame.getPhoneNumberField().getText());
-                        clientBLL.addNewClient(client);
-                        addClientFrame.getAdressField().setText("");
-                        addClientFrame.getNameField().setText("");
-                        addClientFrame.getPhoneNumberField().setText("");
-                        addClientFrame.getEmailField().setText("");
-                JOptionPane.showMessageDialog(null, "Client added successfully.", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
-            });
-        });
-        clientFrame.getEditClientButton().addActionListener(e -> {
-            EditFrame editFrame = new EditFrame("Edit entry", clientBLL.getClientItems());
-            addEditClientButtonAction(editFrame);
-        });
-    }
-
-    /** Function to insert a product in the database
-     * @param productFrame
-     */
-    private void addProductFrameActions(ProductFrame productFrame) {
-
-        addDeleteAndViewProduct(productFrame);
-
-        productFrame.getAddProductButton().addActionListener(e -> {
-            AddProductFrame addProductFrame = new AddProductFrame("Add product");
-
-
-                addProductFrame.getAddProductButton().addActionListener(f -> {
-                try {
-                    float price = Float.parseFloat(addProductFrame.getPriceField().getText());
-                    int quantity = Integer.parseInt(addProductFrame.getQuantityField().getText());
-                    if(price > 0 && quantity > 0){
-
-                    Product product = new Product(addProductFrame.getNameField().getText(), price,
-                            addProductFrame.getDescriptionField().getText(), quantity );
-                    productBLL.addNewProduct(product);
-                    addProductFrame.getNameField().setText("");
-                    addProductFrame.getDescriptionField().setText("");
-                    addProductFrame.getQuantityField().setText("");
-                    addProductFrame.getPriceField().setText("");
-                        JOptionPane.showMessageDialog(null, "Product added", "Success", JOptionPane.INFORMATION_MESSAGE);
-
-                    }else{
-                        JOptionPane.showMessageDialog(null, "Invalid input", "Error", JOptionPane.ERROR_MESSAGE);
-
-                    }
-                }catch (Exception exception){
-                    JOptionPane.showMessageDialog(null, "Invalid input", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-                });
-
-        });
+    public void editProductAction() {
         productFrame.getEditProductButton().addActionListener(e -> {
-            String[] labels = new String[]{"Name", "Price", "Description", "Stock:"};
-            EditFrame editFrame = new EditFrame("Edit entry", productBLL.getProductItems(), labels);
-            addEditProductButtonAction(editFrame);
-        });
-    }
-
-    /** Function to add actionListener for edit button for clients
-     * @param editclientFrame
-     */
-    private void addEditClientButtonAction(EditFrame editclientFrame) {
-        editclientFrame.getChangeEntryButton().addActionListener(e -> {
-            List<String> fields = new ArrayList<>();
-            fields.add(editclientFrame.getNameField().getText());
-            fields.add(editclientFrame.getAddressField().getText());
-            fields.add(editclientFrame.getEmailField().getText());
-            fields.add(editclientFrame.getNumberField().getText());
-            int id = getIdFromText(editclientFrame.getEntryBox().getSelectedItem().toString());
-            Client c = clientBLL.findClientById(id);
-
-            if (fields.get(0).equals("") == false) {
-                c.setName(fields.get(0));
-            }
-            if (fields.get(1).equals("") == false) {
-                c.setAddress(fields.get(1));
-            }
-            if (fields.get(2).equals("") == false) {
-                c.setEmail(fields.get(2));
-            }
-            if (fields.get(3).equals("") == false) {
-                c.setPhoneNumber(fields.get(3));
-            }
-            clientBLL.editClient(c);
-        });
-
-    }
-
-    /** Function to add actionListener for edit button for product
-     * @param editProductFrame
-     */
-    private void addEditProductButtonAction(EditFrame editProductFrame) {
-        editProductFrame.getChangeEntryButton().addActionListener(e -> {
-            List<String> fields = new ArrayList<>();
-            fields.add(editProductFrame.getNameField().getText());
-            fields.add(editProductFrame.getAddressField().getText());
-            fields.add(editProductFrame.getEmailField().getText());
-            fields.add(editProductFrame.getNumberField().getText());
-            int id = getIdFromText(editProductFrame.getEntryBox().getSelectedItem().toString());
-            Product c = productBLL.findProductById(id);
-
-            if (fields.get(0).equals("") == false) {
-                c.setName(fields.get(0));
-            }
-            if (fields.get(1).equals("") == false) {
-                try {
-                    c.setPrice(Float.parseFloat(fields.get(1)));
-                } catch (NumberFormatException f) {
-                    f.printStackTrace();
+            try {
+                int id = Integer.parseInt(productFrame.getIdField().getText());
+                List<String> fields = getProductTextFields();
+                Product product = productBLL.findProductById(id);
+                if (fields.get(0).equals("") == false) {
+                    product.setName(fields.get(0));
                 }
+                if (fields.get(1).equals("") == false) {
+                    product.setPrice(Float.parseFloat(fields.get(1)));
+                }
+                if (fields.get(2).equals("") == false) {
+                    product.setDescription(fields.get(2));
+                }
+                if (fields.get(3).equals("") == false) {
+                    product.setLeftInStock(Integer.parseInt(fields.get(3)));
+                }
+                productBLL.editProduct(product);
+                refreshProductFrame();
+            } catch (NumberFormatException f) {
+                JOptionPane.showMessageDialog(null, "Invalid id.", "ERROR", JOptionPane.INFORMATION_MESSAGE);
             }
-            if (fields.get(2).equals("") == false) {
-                c.setDescription(fields.get(2));
-            }
-            if (fields.get(3).equals("") == false) {
-                c.setLeftInStock(Integer.parseInt(fields.get(3)));
-            }
-            productBLL.editProduct(c);
-        });
-
-    }
-
-    /**  Function to add actionListener for delete button and view int the clientFrame
-     * @param clientFrame the frame to add actionListeners to
-     */
-    private void addDeleteAndViewClient(ClientFrame clientFrame) {
-        clientFrame.getViewAllButton().addActionListener(e -> {
-            JFrame tableFrame = new JFrame();
-            JTable table = clientBLL.getTableOfClients();
-            JScrollPane panel = new JScrollPane(table);
-            tableFrame.setVisible(true);
-            panel.setVisible(true);
-            tableFrame.setSize(new Dimension(700,350));
-            table.setFillsViewportHeight(true);
-            tableFrame.setContentPane(panel);
-        });
-        clientFrame.getDeleteClientButton().addActionListener(e -> {
-            DeleteFrame deleteFrame = new DeleteFrame("Delete Clients", clientBLL.getClientItems());
-            deleteFrame.getDeleteButton().addActionListener(f -> {
-                int idCl = getIdFromText(deleteFrame.getComboBox().getSelectedItem().toString());
-                Client temp = new Client();
-                temp.setIdClient(idCl);
-                clientBLL.deleteClient(temp);
-            });
         });
     }
 
-    /**Function to add actionListener for delete button and view int the productFrame
-     * @param productFrame
-     */
-    private void addDeleteAndViewProduct(ProductFrame productFrame) {
-        productFrame.getViewAllButton().addActionListener(f -> {
-            JFrame tableFrame = new JFrame();
+    public void viewProductsAction() {
+        productFrame.getViewProductButton().addActionListener(e -> {
+            productFrame.getTablePanel().removeAll();
             JTable table = productBLL.getTableOfProducts();
-            JScrollPane panel = new JScrollPane(table);
             table.setFillsViewportHeight(true);
-            tableFrame.setVisible(true);
-            panel.setVisible(true);
-            tableFrame.setSize(new Dimension(700,350));
-            tableFrame.setContentPane(panel);
-        });
-        productFrame.getDeleteProductButton().addActionListener(e -> {
-            DeleteFrame deleteFrame = new DeleteFrame("Delete Products", productBLL.getProductItems());
-            deleteFrame.getDeleteButton().addActionListener(f -> {
-                int idProd = getIdFromText(deleteFrame.getComboBox().getSelectedItem().toString());
-                Product temp = new Product();
-                temp.setProductID(idProd);
-                productBLL.deleteProduct(temp);
-            });
+            productFrame.getTablePanel().add(new JScrollPane(table));
+            productFrame.getTablePanel().revalidate();
+            productFrame.getTablePanel().repaint();
         });
     }
 
-    /** Function to retrieve the id from a string
-     * @param s the string to find the id in
-     * @return the id from the JComboBox
+    public void deleteProductAction() {
+        productFrame.getDeleteProductButton().addActionListener(e->{
+            try {
+                int id = Integer.parseInt(productFrame.getIdField().getText());
+                Product temp = new Product();
+                temp.setProductID(id);
+                productBLL.deleteProduct(temp);
+                JOptionPane.showMessageDialog(null, "Product removed", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+                refreshProductFrame();
+            } catch (NumberFormatException f) {
+                JOptionPane.showMessageDialog(null, "Invalid id.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    public void refreshClientFrame() {
+        clientFrame.getIdField().setText("");
+        clientFrame.getAddressField().setText("");
+        clientFrame.getNameField().setText("");
+        clientFrame.getPhoneNumber().setText("");
+        clientFrame.getMailField().setText("");
+    }
+
+    public void refreshProductFrame() {
+        productFrame.getIdField().setText("");
+        productFrame.getNameField().setText("");
+        productFrame.getDescriptionField().setText("");
+        productFrame.getPriceField().setText("");
+        productFrame.getQuantityField().setText("");
+    }
+
+    /**
+     * Method to get the values from the text field
+     * @return A list of strings with the values taken from the GUI
      */
-    private int getIdFromText(String s) {
+    public List<String> getClientTextFields() {
+        List<String> fields = new ArrayList<>();
+        fields.add(clientFrame.getNameField().getText());
+        fields.add(clientFrame.getAddressField().getText());
+        fields.add(clientFrame.getMailField().getText());
+        fields.add(clientFrame.getPhoneNumber().getText());
+        return fields;
+    }
+
+    public List<String> getProductTextFields() {
+        List<String> fields = new ArrayList<>();
+        fields.add(productFrame.getNameField().getText());
+        fields.add(productFrame.getPriceField().getText());
+        fields.add(productFrame.getDescriptionField().getText());
+        fields.add(productFrame.getQuantityField().getText());
+        return fields;
+    }
+
+    /**
+     * Method to get the id from a string
+     * @param s The selected item from the combobox
+     * @return The id
+     */
+    public int getIdFromText(String s) {
         Pattern p = Pattern.compile("\\d+");
         Matcher m = p.matcher(s);
         if (m.find())
@@ -251,41 +243,55 @@ public class Controller {
             return -1;
     }
 
-    /**
-     * Function to add action listener for order button
-     * The order is performed and the bill is created
-     * @param orderFrame
-     */
-    private void addOrderAction(OrderFrame orderFrame) {
-
+    public void addOrderAction() {
         orderFrame.getPlaceOrderButton().addActionListener(e -> {
             int idProd = getIdFromText(orderFrame.getProductBox().getSelectedItem().toString());
             int idClient = getIdFromText(orderFrame.getSelectClientBox().getSelectedItem().toString());
-            int quantity = Integer.parseInt(orderFrame.getQuantityField().getText());
-            if (quantity > 0) {
-                Product product = productBLL.findProductById(idProd);
-                int leftInStock = product.getLeftInStock() - quantity;
-                if (leftInStock > 0) {
-                    float totalPrice = product.getPrice() * quantity;
-                    Order order = new Order(totalPrice, idClient, idProd, quantity);
-                    product.setLeftInStock(leftInStock);
-                    productBLL.editProduct(product);
-                    orderBLL.addNewOrder(order);
-                    receipt.printReceipt(order,clientBLL,productBLL);
-                    orderFrame.getQuantityField().setText("");
-                    JOptionPane.showMessageDialog(null, "SUCCESS.", "", JOptionPane.INFORMATION_MESSAGE);
+            try {
+                int quantity = Integer.parseInt(orderFrame.getQuantityField().getText());
+                if (quantity > 0) {
+                    Product product = productBLL.findProductById(idProd);
+                    int leftInStock = product.getLeftInStock() - quantity;
+                    if (leftInStock >= 0) {
+                        float totalPrice = product.getPrice() * quantity;
+                        Order order = new Order(totalPrice, idClient, idProd, quantity);
+                        product.setLeftInStock(leftInStock);
+                        productBLL.editProduct(product);
+                        orderBLL.addNewOrder(order);
+                        receipt.printReceipt(order, clientBLL, productBLL);
+                        orderFrame.getQuantityField().setText("");
+                        JOptionPane.showMessageDialog(null, "Order placed!", "SUCCESS", JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(null, "Stock unavailable.", "ERROR", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else
+                    JOptionPane.showMessageDialog(null, "Invalid quantity.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            }catch (NumberFormatException g){
+                JOptionPane.showMessageDialog(null, "Invalid quantity.", "ERROR", JOptionPane.ERROR_MESSAGE);
+            } }); }
 
-                } else {
-                    JOptionPane.showMessageDialog(null, "Stock unavailable.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
-            } else
-                JOptionPane.showMessageDialog(null, "Quantity not valid.", "ERROR", JOptionPane.ERROR_MESSAGE);
-
+    public void viewOrdersAction(){
+        orderFrame.getViewAllOrdersButton().addActionListener(e -> {
+            orderFrame.getTablePanel().removeAll();
+            orderFrame.getTablePanel().add(new JScrollPane(orderBLL.getTableOfOrders()));
+            orderFrame.getTablePanel().revalidate();
+            orderFrame.getTablePanel().repaint();
+        });
+        orderFrame.getViewClientsButton().addActionListener(e->{
+            orderFrame.getTablePanel().removeAll();
+            orderFrame.getTablePanel().add(new JScrollPane(clientBLL.getTableOfClients()));
+            orderFrame.getTablePanel().revalidate();
+            orderFrame.getTablePanel().repaint();
+        });
+        orderFrame.getViewProductsButton().addActionListener(e->{
+            orderFrame.getTablePanel().removeAll();
+            orderFrame.getTablePanel().add(new JScrollPane(productBLL.getTableOfProducts()));
+            orderFrame.getTablePanel().revalidate();
+            orderFrame.getTablePanel().repaint();
         });
     }
 
-    public static void main(String[] args){
-
+    public static void main(String[] args) {
         Controller controller = new Controller();
     }
 }

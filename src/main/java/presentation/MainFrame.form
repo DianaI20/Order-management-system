@@ -34,16 +34,6 @@
                   <text value="Product Operations"/>
                 </properties>
               </component>
-              <component id="e780f" class="javax.swing.JButton" binding="ordersButton" default-binding="true">
-                <constraints>
-                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
-                    <preferred-size width="180" height="40"/>
-                  </grid>
-                </constraints>
-                <properties>
-                  <text value="Orders"/>
-                </properties>
-              </component>
               <component id="8bf5" class="javax.swing.JButton" binding="clientOperationsButton" default-binding="true">
                 <constraints>
                   <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
@@ -53,6 +43,16 @@
                 <properties>
                   <margin top="0" left="0" bottom="0" right="0"/>
                   <text value="Client Operations"/>
+                </properties>
+              </component>
+              <component id="e780f" class="javax.swing.JButton" binding="ordersButton" default-binding="true">
+                <constraints>
+                  <grid row="2" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false">
+                    <preferred-size width="180" height="40"/>
+                  </grid>
+                </constraints>
+                <properties>
+                  <text value="Orders"/>
                 </properties>
               </component>
             </children>

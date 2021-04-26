@@ -2,10 +2,8 @@ package dao;
 
 import connection.ConnectionFactory;
 import javax.swing.*;
-import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.sql.*;
@@ -17,22 +15,22 @@ import java.util.logging.Logger;
 public class AbstractDAO<T> {
     protected static final Logger LOGGER = Logger.getLogger(AbstractDAO.class.getName());
     private final Class<T> type;
-    private TableDao<T> tableDao;
+    private TableDAO<T> tableDao;
     @SuppressWarnings("unchecked")
     public AbstractDAO() {
-        tableDao = new TableDao();
+        tableDao = new TableDAO();
         this.type = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
     }
     /**
-     *
-     * @param field
-     * @return
+     *  Function to create a sql statement.
+     * @param field The field that the selection is based on
+     * @return A string representing the query to be executed
      */
     private String createSelectQuery(String field) {
         StringBuilder sb = new StringBuilder();
         sb.append("SELECT ");
         sb.append(" * ");
-        sb.append(" FROM ");
+        sb.append(" FROM order_management_system.");
         sb.append(type.getSimpleName().toLowerCase());
         if (field.equals(" ") == false)
             sb.append(" WHERE " + field + " =?");
@@ -50,6 +48,7 @@ public class AbstractDAO<T> {
         PreparedStatement statement = null;
         ResultSet resultSet = null;
         String query = createSelectQuery(" ");
+
         try {
             connection = ConnectionFactory.getConnection();
             statement = connection.prepareStatement(query);
@@ -68,8 +67,8 @@ public class AbstractDAO<T> {
 
     /**
      * Function to return an object from the database
-     * @param id
-     * @return
+     * @param id The id of the object to be fetched
+     * @return Object with the mentioned id.
      */
     public T findById(int id) {
         Connection connection = null;
@@ -96,12 +95,11 @@ public class AbstractDAO<T> {
 
     /**
      *
-     * @param resultSet
+     * @param resultSet  A table of data representing a database result set
      * @return A list of objects created from the set fetched from the database
      */
     private List<T> createObjects(ResultSet resultSet) {
         List<T> list = new ArrayList<T>();
-
         try {
             while (resultSet.next()) {
                 T instance = type.getDeclaredConstructor().newInstance();
@@ -113,25 +111,10 @@ public class AbstractDAO<T> {
                 }
                 list.add(instance);
             }
-        } catch (InstantiationException e) {
+        } catch (Exception e) {
             e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (SecurityException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
-        } catch (InvocationTargetException e) {
-            e.printStackTrace();
-        } catch (SQLException e) {
-            e.printStackTrace();
-        } catch (IntrospectionException e) {
-            e.printStackTrace();
-        } catch (NoSuchMethodException e) {
-            e.printStackTrace();
-
         }
-        return list;
+       return list;
     }
 
     /**
@@ -204,30 +187,20 @@ public class AbstractDAO<T> {
      * @return The updated object
      */
     public T update(T t) {
-        Connection connection = null;
+        Connection connection = null;int i;
         PreparedStatement updateStatement = null;
         String tableName = t.getClass().getSimpleName().toLowerCase();
         StringBuilder updateStatementString = new StringBuilder("UPDATE  order_management_system." + tableName + " SET ");
-        int i;
         try {
-             //  Establishing connection with the database
-
             Object fieldValue;
             connection = ConnectionFactory.getConnection();
             Field fields[] = t.getClass().getDeclaredFields();
-
-             // Processing the fields names and values and appending them to the query
-
             for (i = 1; i < fields.length - 1; i++) {
                 fields[i].setAccessible(true);
                 fieldValue = fields[i].get(t);
                 updateStatementString.append(fields[i].getName() + "=" + "'" + fieldValue + "' ");
                 updateStatementString.append(",");
             }
-
-             // Processing the last element and using the first element into the condition statement
-             // The value of the object will be updated with respect to its id
-
             fields[i].setAccessible(true);
             fields[0].setAccessible(true);
             fieldValue = fields[i].get(t);
@@ -236,16 +209,12 @@ public class AbstractDAO<T> {
             updateStatementString.append("WHERE " + fields[0].getName() + " = " + fieldValue);
             updateStatement = connection.prepareStatement(updateStatementString.toString(), Statement.RETURN_GENERATED_KEYS);
             updateStatement.executeUpdate();
-
         } catch (Exception e) {
             LOGGER.log(Level.WARNING, type.getName() + "DAO: update " + e.getMessage());
         } finally {
-             // Closing the connections
-
             ConnectionFactory.close(updateStatement);
             ConnectionFactory.close(connection);
-        }
-        return t;
+        }return t;
     }
 
     /**
@@ -281,7 +250,7 @@ public class AbstractDAO<T> {
         return t;
     }
     /**
-     *
+     * Function to create a table with list of objects.
      * @param t representing the list which will be inserted into the table
      * @return the JTable corresponding to the list passed as a parameter
      */

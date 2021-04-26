@@ -15,6 +15,12 @@ import java.time.format.DateTimeFormatter;
 public class Receipt {
     private static int index = 1;
 
+    /**
+     * Function to print the bill after an order is placed.
+     * @param order The order
+     * @param clientBLL The clientBLL having all information about the clients
+     * @param productBLL The productBLL having all information about the products
+     */
     public void printReceipt(Order order, ClientBLL clientBLL, ProductBLL productBLL) {
         Client client = clientBLL.findClientById(order.getClientId());
         Product product = productBLL.findProductById(order.getProductId());
