@@ -1,9 +1,9 @@
 Order id: 1
-Placed at: 2021/04/26 19:50:36
+Placed at: 2021/04/27 08:47:13
 Client details:Address:asf
 Phone number: 1234567890
 Email: m@gmail.com
 Product: Product1
-Quantity: 15
+Quantity: 10
 Price per product:25.35
-Total: 380.25
+Total: 253.5

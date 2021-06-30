@@ -97,6 +97,7 @@ public class ClientFrame extends JFrame {
         this.setVisible(true);
         this.setResizable(false);
         this.pack();
+        
    }
 
     public JButton getAddClientButton() {

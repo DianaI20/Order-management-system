@@ -1,9 +1,0 @@
-Order id: 2
-Placed at: 2021/04/26 19:50:43
-Client details:Address:address
-Phone number: 7894561230
-Email: maile@gmail.com
-Product: Added product
-Quantity: 25
-Price per product:25.3
-Total: 632.5
